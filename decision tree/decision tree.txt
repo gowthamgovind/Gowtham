@@ -1,0 +1,46 @@
+setwd("E:/R")
+#reading the data
+game <- read.csv(file = "game.csv")
+View(game)
+game[,-c(2,4,14,16,18,19)]
+t <- game[,-c(2,4,14,16,18,19)]
+str(t)
+t$class<-factor(t$class)
+table(t$class)
+summary(t)
+str(t)
+#datapartition
+set.seed(1234)
+pd<-sample(2,nrow(t),replace=TRUE,prob=c(0.8,0.2))
+train<-t[pd==1,]
+validate<-t[pd==2,]
+#decision tree with party package
+install.packages("party")
+tree<-ctree(class~max_time+min_time+avg_time,data=train)
+tree
+plot(tree)
+#reducing the nodes
+tree1<-ctree(class~max_time+min_time+avg_time,data=train,controls = ctree_control(mincriterion = 0.99,minsplit = 500))
+tree1
+plot(tree1)
+#predict
+predict(tree1,validate,type="prob")
+predict(tree1,validate)
+#decision tree with rpart package
+install.packages("rpart")
+tree2<- rpart(class~max_time+min_time+avg_time,data=train)
+install.packages("rpart.plot")
+rpart.plot(tree2)
+rpart.plot(tree2,extra = 4)
+#predict
+predict(tree1,validate)
+#miscalssification error
+tab<-table(predict(tree),train$class)
+print(tab)
+1-sum(diag(tab))/sum(tab)
+#miscalssification error in validate
+testpred<-predict(tree1,newdata=validate)
+tab<-table(testpred,validate$class)
+print(tab)
+1-sum(diag(tab))/sum(tab)
+
