@@ -1,0 +1,41 @@
+setwd("E:/R")
+#reading the data
+cust <- read.csv(file = "sample.csv")
+View(cust)
+cust[,-c(2,6,7,9,10,11,12,13,14,15,16)]
+t <- cust[,-c(2,6,7,9,10,11,12,13,14,15,16)]
+str(t)
+t$class<-factor(t$class)
+table(t$class)
+summary(t)
+str(t)
+#datapartition
+set.seed(1234)
+pd<-sample(2,nrow(t),replace=TRUE,prob=c(0.8,0.2))
+train<-t[pd==1,]
+validate<-t[pd==2,]
+#decision tree with party package
+install.packages("multcomp")
+install.packages("party")
+install.packages("tree")
+tree1<-ctree(class~transaction_amount+dependents,data=train)
+tree1
+plot(tree1)
+#reducing the nodes
+tree2<-ctree(class~transaction_amount+dependents,data=train,controls = ctree_control(mincriterion = 0.99,minsplit = 500))
+tree2
+plot(tree2)
+#predict
+predict(tree2,validate,type="prob")
+predict(tree2,validate)
+#predict
+predict(tree2,validate)
+#miscalssification error
+tab<-table(predict(tree1),train$class)
+print(tab)
+1-sum(diag(tab))/sum(tab)
+#miscalssification error in validate
+testpred<-predict(tree2,newdata=validate)
+tab<-table(testpred,validate$class)
+print(tab)
+
